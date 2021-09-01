@@ -12,6 +12,9 @@ public class Groups extends ArrayList<Group> {
         ArrayList<SmallToken> smallTokens = new ArrayList<>();
         for (int i = 0; i < pattern.length(); i++) {
             char c = pattern.charAt(i);
+            if (c == '*') {
+                continue;
+            }
             if (i == pattern.length() - 1) {
                 smallTokens.add(new SmallToken(c, false));
                 break;
