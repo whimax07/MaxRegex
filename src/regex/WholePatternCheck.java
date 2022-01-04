@@ -4,7 +4,7 @@ import utils.*;
 
 public class WholePatternCheck {
 
-    private final DequeMap<Group, RepeatableHistory> repeatablessTracking = new DequeMap<>();
+    private final DequeMap<Group, RepeatableHistory> repeatablesTracking = new DequeMap<>();
 
     private final Groups groups;
 
@@ -59,13 +59,13 @@ public class WholePatternCheck {
 
     private boolean newRepeatGroup(Group group) {
         if (group.isRepeatable()) {
-            RepeatableHistory repeatableHistory = repeatablessTracking.get(group);
+            RepeatableHistory repeatableHistory = repeatablesTracking.get(group);
 
             // Note(Max): If this is the "first time this group has been seen" staredHistory is null so add it to
             // the tracking. As its stared we can start with a zero length search, aka just increment groupPos check
             // the state of the search.
             if (repeatableHistory == null) {
-                repeatablessTracking.putFirst(group, new RepeatableHistory(groupPos, strPos));
+                repeatablesTracking.putFirst(group, new RepeatableHistory(groupPos, strPos));
                 return true;
             }
         }
@@ -114,7 +114,7 @@ public class WholePatternCheck {
         strPos = searchResult.firstFreeChar();
 
         if (group.isRepeatable()) {
-            repeatablessTracking.putFirst(group, new RepeatableHistory(groupPos, strPos));
+            repeatablesTracking.putFirst(group, new RepeatableHistory(groupPos, strPos));
         }
 
         groupPos++;
@@ -137,7 +137,7 @@ public class WholePatternCheck {
 
         // All the groups have been used, but we can't get any further. So we have to try and rollback. This also
         // means that the last group is not stared. (If it was we could try the next char(s).)
-        if (repeatablessTracking.isEmpty()) {
+        if (repeatablesTracking.isEmpty()) {
             return E_State.FAILURE;
         }
 
@@ -145,19 +145,16 @@ public class WholePatternCheck {
     }
 
     private E_State groupNotFound(Group group) {
-        // Tracking is only empty if we haven't seen a repeatable group yet.
-        if (repeatablessTracking.isEmpty()) {
-            return E_State.FAILURE;
-        }
+        // At the start of this function tracking is only empty if we haven't seen a repeatable group yet.
 
         if (group.isRepeatable()) {
             // We have gone too far with this current match.
-            repeatablessTracking.removeFirst();
+            repeatablesTracking.removeFirst();
         }
 
         // If tracking is empty then we cannot unwind. This makes the layout of the match up to this point "rigid" and
         // therefore the match has failed.
-        if (repeatablessTracking.isEmpty()) {
+        if (repeatablesTracking.isEmpty()) {
             return E_State.FAILURE;
         }
 
@@ -165,7 +162,7 @@ public class WholePatternCheck {
     }
 
     private void unwind() {
-        RepeatableHistory rollbackPoint = repeatablessTracking.getFirst();
+        RepeatableHistory rollbackPoint = repeatablesTracking.getFirst();
         groupPos = rollbackPoint.groupPos();
         strPos = rollbackPoint.strPos();
     }
