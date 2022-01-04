@@ -5,9 +5,6 @@ import utils.*;
 public class WholePatternCheck {
 
     private final DequeMap<Group, RepeatableHistory> repeatablessTracking = new DequeMap<>();
-//    private final HashMap<Group, RepeatableHistory> repeatablessTracking = new HashMap<>();
-//
-//    private final ArrayDeque<Group> repeatablessQue = new ArrayDeque<>();
 
     private final Groups groups;
 
@@ -42,6 +39,7 @@ public class WholePatternCheck {
     private E_State searchLoop() {
         Group group = groups.get(groupPos);
 
+        // Note(Max): Here is where I would probably put the branch for a search with a greedy group.
         return lazySearchGroup(group);
     }
 
