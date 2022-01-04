@@ -9,7 +9,7 @@ public class Groups extends ArrayList<Group> {
             return new Groups();
         }
 
-        // Note(Max): This is worse for performance than inlining it with the next for-loop. I don't want to inline it
+        // Note(Max): This is worse for performance than inlining it with the next for-loop. I don't want to inline it,
         // and I think making a generator or a function to do it is likely slower even if it is more memory efficient.
         ArrayList<SmallToken> smallTokens = new ArrayList<>();
         for (int i = 0; i < pattern.length(); i++) {
@@ -46,8 +46,7 @@ public class Groups extends ArrayList<Group> {
                 }
                 groups.add(new Group("" + smallToken.c, true, smallToken.charClass));
                 s = new StringBuilder();
-                // It'chars important that the current char isn't added to chars as it has already been added to a group and
-                // that the group of the current char isn't carried forward.
+
                 getCurCharClass = true;
                 continue;
             }
