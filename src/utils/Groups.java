@@ -1,3 +1,5 @@
+package utils;
+
 import java.util.ArrayList;
 
 public class Groups extends ArrayList<Group> {
@@ -44,7 +46,7 @@ public class Groups extends ArrayList<Group> {
                 }
                 groups.add(new Group("" + smallToken.c, true, smallToken.charClass));
                 s = new StringBuilder();
-                // It's important that the current char isn't added to s as it has already been added to a group and
+                // It'chars important that the current char isn't added to chars as it has already been added to a group and
                 // that the group of the current char isn't carried forward.
                 getCurCharClass = true;
                 continue;

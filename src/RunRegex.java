@@ -1,3 +1,6 @@
+import regex.MaxRegex;
+import utils.Groups;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -8,11 +11,23 @@ public class RunRegex {
 
     public static void main(String[] args) {
         RunRegex runRegex = new RunRegex();
+        runRegex.checkMaxRegex("", "a", false);
+        runRegex.checkMaxRegex("", "a*", true);
+        runRegex.checkMaxRegex("", ".", false);
+        runRegex.checkMaxRegex("", ".*", true);
+
+        System.out.println("\n");
         runRegex.checkMaxRegex("aa", "a", false);
         runRegex.checkMaxRegex("aa", "a*", true);
+        runRegex.checkMaxRegex("a", "aa*", true);
+        runRegex.checkMaxRegex("b", "a*", false);
+
+        System.out.println("\n");
+        runRegex.checkMaxRegex("aa", ".*", true);
         runRegex.checkMaxRegex("ab", ".*", true);
         runRegex.checkMaxRegex("aab", "c*a*b", true);
         runRegex.checkMaxRegex("mississippi", "mis*is*p*.", false);
+        runRegex.checkMaxRegex("abcdef", ".*.*", true);
         runRegex.checkMaxRegex("abcd", ".....", false);
 
         System.out.println("\n");
@@ -32,6 +47,33 @@ public class RunRegex {
         runRegex.checkMaxRegex("oa", "o*t*a", true);
         runRegex.checkMaxRegex("ota", "o*t*a", true);
         runRegex.checkMaxRegex("otta", "o*t*a", true);
+
+        System.out.println("\n");
+        runRegex.checkMaxRegex("a", ".*.*", true);
+        runRegex.checkMaxRegex("aa", ".*.*", true);
+        runRegex.checkMaxRegex("aaa", ".*.*", true);
+        runRegex.checkMaxRegex("a", ".*.", true);
+        runRegex.checkMaxRegex("aa", ".*.", true);
+        runRegex.checkMaxRegex("aaa", ".*.", true);
+        runRegex.checkMaxRegex("a", "..*", true);
+        runRegex.checkMaxRegex("aa", "..*", true);
+        runRegex.checkMaxRegex("aaa", "..*", true);
+
+        System.out.println("\n");
+        runRegex.checkMaxRegex("a", ".*.*.", true);
+        runRegex.checkMaxRegex("aa", ".*.*.", true);
+        runRegex.checkMaxRegex("aaa", ".*.*.", true);
+        runRegex.checkMaxRegex("a", "..*.*", true);
+        runRegex.checkMaxRegex("aa", "..*.*", true);
+        runRegex.checkMaxRegex("aaa", "..*.*", true);
+
+        System.out.println("\n");
+        runRegex.checkMaxRegex("a", ".*..*", true);
+        runRegex.checkMaxRegex("aa", ".*..*", true);
+        runRegex.checkMaxRegex("aaa", ".*..*", true);
+        runRegex.checkMaxRegex("aa", ".*...*", true);
+        runRegex.checkMaxRegex("aaa", ".*...*", true);
+
 
         System.out.println("\n");
         System.out.println("Starting the randomised tests.");
