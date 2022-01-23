@@ -1,5 +1,5 @@
 import regex.MaxRegex;
-import utils.Groups;
+import regex.PatternTokens;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,8 +90,8 @@ public class RunRegex {
 
     public void checkMaxRegex(String string, String pattern, boolean truth) {
         testCount++;
-        Groups groups = Groups.tokenize(pattern);
-        if (MaxRegex.whollyContainedIn(groups, string) == truth) {
+        PatternTokens patternTokens = new PatternTokens(pattern);
+        if (MaxRegex.whollyContainedIn(patternTokens, string) == truth) {
             System.out.println("Test " + testCount + " passed.");
         } else {
             System.out.println("Test " + testCount + " failed.");
@@ -129,8 +129,8 @@ public class RunRegex {
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(string);
 
-        Groups groups = Groups.tokenize(pattern);
-        if (m.matches() != MaxRegex.whollyContainedIn(groups, string)) {
+        PatternTokens patternTokens = new PatternTokens(pattern);
+        if (m.matches() != MaxRegex.whollyContainedIn(patternTokens, string)) {
             System.out.println("String: " + string + " Pattern: " + pattern);
             randomTestFailed = true;
         }

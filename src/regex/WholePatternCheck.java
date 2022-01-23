@@ -1,12 +1,12 @@
 package regex;
 
-import utils.*;
+import storage.*;
 
 public class WholePatternCheck {
 
     private final DequeMap<Group, RepeatableHistory> repeatablesTracking = new DequeMap<>();
 
-    private final Groups groups;
+    private final PatternTokens patternTokens;
 
     private final String input;
 
@@ -16,8 +16,8 @@ public class WholePatternCheck {
 
 
 
-    public WholePatternCheck(Groups groups, String input) {
-        this.groups = groups;
+    public WholePatternCheck(PatternTokens patternTokens, String input) {
+        this.patternTokens = patternTokens;
         this.input = input;
     }
 
@@ -37,7 +37,7 @@ public class WholePatternCheck {
     }
 
     private E_State searchLoop() {
-        Group group = groups.get(groupPos);
+        Group group = patternTokens.get(groupPos);
 
         // Note(Max): Here is where I would probably put the branch for a search with a greedy group.
         return lazySearchGroup(group);
@@ -73,10 +73,9 @@ public class WholePatternCheck {
     }
 
     private E_State check0Repeat() {
-
         groupPos++;
 
-        if (groupPos < groups.size()) {
+        if (groupPos < patternTokens.size()) {
             return E_State.SEARCHING;
         }
         // groupPos == groups.size()
@@ -92,19 +91,19 @@ public class WholePatternCheck {
     }
 
     private static SearchResult matchGroup(Group group, int strPos, String string) {
-        if (group.chars().length() + strPos > string.length()) {
+        if (group.getString().length() + strPos > string.length()) {
             return new SearchResult(-1, false);
         }
 
-        if (group.charClass() == E_CharClass.DOT) {
-            return new SearchResult(group.chars().length() + strPos, true);
+        if (group.getCharClass() == E_CharClass.DOT) {
+            return new SearchResult(group.getString().length() + strPos, true);
         }
 
         // Note(Max): The dot case and the below have been separated as I don't want to have subString being called
         // unless it needed.
-        String subString = string.substring(strPos, strPos + group.chars().length());
-        if (subString.equals(group.chars())) {
-            return new SearchResult(group.chars().length() + strPos, true);
+        String subString = string.substring(strPos, strPos + group.getString().length());
+        if (subString.equals(group.getString())) {
+            return new SearchResult(group.getString().length() + strPos, true);
         }
 
         return new SearchResult(-1, false);
@@ -119,7 +118,7 @@ public class WholePatternCheck {
 
         groupPos++;
 
-        if (groupPos < groups.size()) {
+        if (groupPos < patternTokens.size()) {
             return E_State.SEARCHING;
         }
         // groupPos == groups.size()
