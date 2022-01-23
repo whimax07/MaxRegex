@@ -1,4 +1,4 @@
-package utils;
+package storage;
 
 public enum E_State {
     SEARCHING,
