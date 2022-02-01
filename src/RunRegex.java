@@ -1,5 +1,5 @@
 import regex.MaxRegex;
-import regex.PatternTokens;
+import regex.PatternChunks;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -7,9 +7,16 @@ import java.util.regex.Pattern;
 public class RunRegex {
 
     private long testCount = 0;
+    
     private boolean randomTestFailed = false;
 
+
+    
     public static void main(String[] args) {
+        runTests();
+    }
+
+    public static void runTests() {
         RunRegex runRegex = new RunRegex();
         runRegex.checkMaxRegex("", "a", false);
         runRegex.checkMaxRegex("", "a*", true);
@@ -90,8 +97,8 @@ public class RunRegex {
 
     public void checkMaxRegex(String string, String pattern, boolean truth) {
         testCount++;
-        PatternTokens patternTokens = new PatternTokens(pattern);
-        if (MaxRegex.whollyContainedIn(patternTokens, string) == truth) {
+        PatternChunks patternChunks = new PatternChunks(pattern);
+        if (MaxRegex.whollyContainedIn(patternChunks, string) == truth) {
             System.out.println("Test " + testCount + " passed.");
         } else {
             System.out.println("Test " + testCount + " failed.");
@@ -129,8 +136,8 @@ public class RunRegex {
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(string);
 
-        PatternTokens patternTokens = new PatternTokens(pattern);
-        if (m.matches() != MaxRegex.whollyContainedIn(patternTokens, string)) {
+        PatternChunks patternChunks = new PatternChunks(pattern);
+        if (m.matches() != MaxRegex.whollyContainedIn(patternChunks, string)) {
             System.out.println("String: " + string + " Pattern: " + pattern);
             randomTestFailed = true;
         }

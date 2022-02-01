@@ -1,4 +1,4 @@
 package storage;
 
-public record RepeatableHistory(int groupPos, int strPos) {
+public record RepeatableHistory(int chunkIndex, int inputIndex) {
 }

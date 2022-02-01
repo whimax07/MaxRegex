@@ -2,7 +2,7 @@ package storage;
 
 import java.util.Objects;
 
-public class Group {
+public class Chunk {
 
     private String string = "";
 
@@ -12,15 +12,15 @@ public class Group {
 
 
 
-    public Group() { }
+    public Chunk() { }
 
-    public Group(String string, boolean isRepeatable, E_CharClass charClass) {
+    public Chunk(String string, boolean isRepeatable, E_CharClass charClass) {
         this.string = string;
         this.isRepeatable = isRepeatable;
         this.charClass = charClass;
     }
 
-    public Group(Symbol symbol) {
+    public Chunk(Symbol symbol) {
         this(Character.toString(symbol.c), symbol.repeated, symbol.charClass);
     }
 

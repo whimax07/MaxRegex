@@ -4,20 +4,20 @@ import storage.*;
 
 public class WholePatternCheck {
 
-    private final DequeMap<Group, RepeatableHistory> repeatablesTracking = new DequeMap<>();
+    private final DequeMap<Chunk, RepeatableHistory> repeatablesTracking = new DequeMap<>();
 
-    private final PatternTokens patternTokens;
+    private final PatternChunks patternChunks;
 
     private final String input;
 
-    private int strPos = 0;
+    private int inputIndex = 0;
 
-    private int groupPos = 0;
+    private int chunkIndex = 0;
 
 
 
-    public WholePatternCheck(PatternTokens patternTokens, String input) {
-        this.patternTokens = patternTokens;
+    public WholePatternCheck(PatternChunks patternChunks, String input) {
+        this.patternChunks = patternChunks;
         this.input = input;
     }
 
@@ -37,35 +37,35 @@ public class WholePatternCheck {
     }
 
     private E_State searchLoop() {
-        Group group = patternTokens.get(groupPos);
+        Chunk chunk = patternChunks.get(chunkIndex);
 
         // Note(Max): Here is where I would probably put the branch for a search with a greedy group.
-        return lazySearchGroup(group);
+        return lazySearchChunk(chunk);
     }
 
-    private E_State lazySearchGroup(Group group) {
-        if (newRepeatGroup(group)) {
+    private E_State lazySearchChunk(Chunk chunk) {
+        if (newRepeatChunk(chunk)) {
             return check0Repeat();
         }
 
-        SearchResult searchResult = matchGroup(group, strPos, input);
+        SearchResult searchResult = matchChunk(chunk, inputIndex, input);
 
-        if (searchResult.found()) {
-            return groupMatchFound(group, searchResult);
-        } else {
-            return groupNotFound(group);
+        if (!searchResult.found()) {
+            return chunkNotFound(chunk);
         }
+
+        return chunkMatchFound(chunk, searchResult);
     }
 
-    private boolean newRepeatGroup(Group group) {
-        if (group.isRepeatable()) {
-            RepeatableHistory repeatableHistory = repeatablesTracking.get(group);
+    private boolean newRepeatChunk(Chunk chunk) {
+        if (chunk.isRepeatable()) {
+            RepeatableHistory repeatableHistory = repeatablesTracking.get(chunk);
 
             // Note(Max): If this is the "first time this group has been seen" staredHistory is null so add it to
-            // the tracking. As its stared we can start with a zero length search, aka just increment groupPos check
+            // the tracking. As its stared we can start with a zero length search, aka just increment chunkIndex check
             // the state of the search.
             if (repeatableHistory == null) {
-                repeatablesTracking.putFirst(group, new RepeatableHistory(groupPos, strPos));
+                repeatablesTracking.putFirst(chunk, new RepeatableHistory(chunkIndex, inputIndex));
                 return true;
             }
         }
@@ -73,64 +73,45 @@ public class WholePatternCheck {
     }
 
     private E_State check0Repeat() {
-        groupPos++;
+        chunkIndex++;
 
-        if (groupPos < patternTokens.size()) {
+        if (chunkIndex < patternChunks.size()) {
             return E_State.SEARCHING;
         }
-        // groupPos == groups.size()
+        // chunkIndex == groups.size()
 
         // This is the case where we are done and happy, all groups matched to the full string.
-        if (strPos == input.length()) {
+        if (inputIndex == input.length()) {
             return E_State.SUCCESS;
         }
 
         // This is the case where the pattern has been matched, but it isn't the full string.
-        groupPos--;
+        chunkIndex--;
         return E_State.SEARCHING;
     }
 
-    private static SearchResult matchGroup(Group group, int strPos, String string) {
-        if (group.getString().length() + strPos > string.length()) {
-            return new SearchResult(-1, false);
+    private E_State chunkMatchFound(Chunk chunk, SearchResult searchResult) {
+        inputIndex = searchResult.firstFreeChar();
+
+        if (chunk.isRepeatable()) {
+            repeatablesTracking.putFirst(chunk, new RepeatableHistory(chunkIndex, inputIndex));
         }
 
-        if (group.getCharClass() == E_CharClass.DOT) {
-            return new SearchResult(group.getString().length() + strPos, true);
-        }
+        chunkIndex++;
 
-        // Note(Max): The dot case and the below have been separated as I don't want to have subString being called
-        // unless it needed.
-        String subString = string.substring(strPos, strPos + group.getString().length());
-        if (subString.equals(group.getString())) {
-            return new SearchResult(group.getString().length() + strPos, true);
-        }
-
-        return new SearchResult(-1, false);
-    }
-
-    private E_State groupMatchFound(Group group, SearchResult searchResult) {
-        strPos = searchResult.firstFreeChar();
-
-        if (group.isRepeatable()) {
-            repeatablesTracking.putFirst(group, new RepeatableHistory(groupPos, strPos));
-        }
-
-        groupPos++;
-
-        if (groupPos < patternTokens.size()) {
+        if (chunkIndex < patternChunks.size()) {
             return E_State.SEARCHING;
         }
-        // groupPos == groups.size()
+        // chunkIndex == groups.size()
 
         // This is the case where we are done and happy, all groups matched to the full string.
-        if (strPos == input.length()) {
+        if (inputIndex == input.length()) {
             return E_State.SUCCESS;
         }
 
         // This is the case where the pattern has been matched but it isn't the full string.
-        if (group.isRepeatable()) {
-            groupPos--;
+        if (chunk.isRepeatable()) {
+            chunkIndex--;
             return E_State.SEARCHING;
         }
 
@@ -143,10 +124,10 @@ public class WholePatternCheck {
         return E_State.REQUEST_UNWIND;
     }
 
-    private E_State groupNotFound(Group group) {
+    private E_State chunkNotFound(Chunk chunk) {
         // At the start of this function tracking is only empty if we haven't seen a repeatable group yet.
 
-        if (group.isRepeatable()) {
+        if (chunk.isRepeatable()) {
             // We have gone too far with this current match.
             repeatablesTracking.removeFirst();
         }
@@ -162,8 +143,28 @@ public class WholePatternCheck {
 
     private void unwind() {
         RepeatableHistory rollbackPoint = repeatablesTracking.getFirst();
-        groupPos = rollbackPoint.groupPos();
-        strPos = rollbackPoint.strPos();
+        chunkIndex = rollbackPoint.chunkIndex();
+        inputIndex = rollbackPoint.inputIndex();
+    }
+
+
+
+    private static SearchResult matchChunk(Chunk chunk, int stringIdx, String string) {
+        if (chunk.getString().length() + stringIdx > string.length()) {
+            return new SearchResult(-1, false);
+        }
+
+        if (chunk.getCharClass() == E_CharClass.DOT) {
+            return new SearchResult(chunk.getString().length() + stringIdx, true);
+        }
+
+        // Note(Max): The dot case does not need charter checking so we do that before getting a substring.
+        String subString = string.substring(stringIdx, stringIdx + chunk.getString().length());
+        if (subString.equals(chunk.getString())) {
+            return new SearchResult(chunk.getString().length() + stringIdx, true);
+        }
+
+        return new SearchResult(-1, false);
     }
 
 }
