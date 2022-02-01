@@ -6,9 +6,9 @@ import java.util.HashMap;
 @SuppressWarnings("UnusedReturnValue")
 public class DequeMap<K, V> {
 
-    private HashMap<K, V> map = new HashMap<>();
+    private final HashMap<K, V> map = new HashMap<>();
 
-    private ArrayDeque<K> deque = new ArrayDeque<>();
+    private final ArrayDeque<K> deque = new ArrayDeque<>();
 
 
 
