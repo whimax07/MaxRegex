@@ -97,7 +97,7 @@ public class RunRegex {
 
     public void checkMaxRegex(String string, String pattern, boolean truth) {
         testCount++;
-        PatternChunks patternChunks = new PatternChunks(pattern);
+        PatternChunks patternChunks = MaxRegex.tokenize(pattern);
         if (MaxRegex.whollyContainedIn(patternChunks, string) == truth) {
             System.out.println("Test " + testCount + " passed.");
         } else {
@@ -136,7 +136,7 @@ public class RunRegex {
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(string);
 
-        PatternChunks patternChunks = new PatternChunks(pattern);
+        PatternChunks patternChunks = MaxRegex.tokenize(pattern);
         if (m.matches() != MaxRegex.whollyContainedIn(patternChunks, string)) {
             System.out.println("String: " + string + " Pattern: " + pattern);
             randomTestFailed = true;

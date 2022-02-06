@@ -2,6 +2,10 @@ package storage;
 
 import java.util.Objects;
 
+/**
+ * A chunk is a mix of a token and a semantic object. They are Groups of tokens that have been combined into one search
+ * object.
+ */
 public class Chunk {
 
     private String string = "";

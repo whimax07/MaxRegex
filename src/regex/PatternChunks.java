@@ -5,6 +5,9 @@ import storage.Symbol;
 
 import java.util.ArrayList;
 
+/**
+ * An array list of {@link Chunk} which are similar to tokens. They are created from a {@link MaxRegex} search pattern.
+ */
 public class PatternChunks extends ArrayList<Chunk> {
 
     private String pattern;

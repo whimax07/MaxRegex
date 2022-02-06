@@ -2,6 +2,9 @@ package regex;
 
 import storage.*;
 
+/**
+ * A non-recursive whole string matcher. A limited implementation of regex.
+ */
 public class WholePatternCheck {
 
     private final DequeMap<Chunk, RepeatableHistory> repeatablesTracking = new DequeMap<>();
