@@ -7,7 +7,7 @@ import storage.*;
  */
 public class WholePatternCheck {
 
-    private final DequeMap<Chunk, RepeatableHistory> repeatablesTracking = new DequeMap<>();
+    private final DequeMap<I_Chunk, RepeatableHistory> repeatablesTracking = new DequeMap<>();
 
     private final PatternChunks patternChunks;
 
@@ -46,12 +46,12 @@ public class WholePatternCheck {
         return lazySearchChunk(chunk);
     }
 
-    private E_State lazySearchChunk(Chunk chunk) {
+    private E_State lazySearchChunk(I_Chunk chunk) {
         if (newRepeatChunk(chunk)) {
             return check0Repeat();
         }
 
-        SearchResult searchResult = matchChunk(chunk, inputIndex, input);
+        SearchResult searchResult = chunk.matchChunk(inputIndex, input);
 
         if (!searchResult.found()) {
             return chunkNotFound(chunk);
@@ -60,7 +60,7 @@ public class WholePatternCheck {
         return chunkMatchFound(chunk, searchResult);
     }
 
-    private boolean newRepeatChunk(Chunk chunk) {
+    private boolean newRepeatChunk(I_Chunk chunk) {
         if (chunk.isRepeatable()) {
             RepeatableHistory repeatableHistory = repeatablesTracking.get(chunk);
 
@@ -93,7 +93,7 @@ public class WholePatternCheck {
         return E_State.SEARCHING;
     }
 
-    private E_State chunkMatchFound(Chunk chunk, SearchResult searchResult) {
+    private E_State chunkMatchFound(I_Chunk chunk, SearchResult searchResult) {
         inputIndex = searchResult.firstFreeChar();
 
         if (chunk.isRepeatable()) {
@@ -127,7 +127,7 @@ public class WholePatternCheck {
         return E_State.REQUEST_UNWIND;
     }
 
-    private E_State chunkNotFound(Chunk chunk) {
+    private E_State chunkNotFound(I_Chunk chunk) {
         // At the start of this function tracking is only empty if we haven't seen a repeatable group yet.
 
         if (chunk.isRepeatable()) {
@@ -148,26 +148,6 @@ public class WholePatternCheck {
         RepeatableHistory rollbackPoint = repeatablesTracking.getFirst();
         chunkIndex = rollbackPoint.chunkIndex();
         inputIndex = rollbackPoint.inputIndex();
-    }
-
-
-
-    private static SearchResult matchChunk(Chunk chunk, int stringIdx, String string) {
-        if (chunk.getString().length() + stringIdx > string.length()) {
-            return new SearchResult(-1, false);
-        }
-
-        if (chunk.getCharClass() == E_CharClass.DOT) {
-            return new SearchResult(chunk.getString().length() + stringIdx, true);
-        }
-
-        // Note(Max): The dot case does not need charter checking so we do that before getting a substring.
-        String subString = string.substring(stringIdx, stringIdx + chunk.getString().length());
-        if (subString.equals(chunk.getString())) {
-            return new SearchResult(chunk.getString().length() + stringIdx, true);
-        }
-
-        return new SearchResult(-1, false);
     }
 
 }

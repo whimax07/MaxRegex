@@ -1,5 +1,6 @@
 package storage;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -8,69 +9,49 @@ import java.util.Objects;
  */
 public class Chunk {
 
-    private String string = "";
+    private final ArrayList<Terminator> terminators = new ArrayList<>();
 
-    private boolean isRepeatable;
+    private boolean isLeaf;
 
-    private E_CharClass charClass;
+    private final ArrayList<Chunk> chunks = new ArrayList<>();
 
 
 
-    public Chunk() { }
+    public SearchResult matchChunk(int stringIdx, String input) {
 
-    public Chunk(String string, boolean isRepeatable, E_CharClass charClass) {
-        this.string = string;
-        this.isRepeatable = isRepeatable;
-        this.charClass = charClass;
-    }
-
-    public Chunk(Symbol symbol) {
-        this(Character.toString(symbol.c), symbol.repeated, symbol.charClass);
     }
 
 
 
-    public void setString(String string) {
-        this.string = string;
+    public void appendTerminator(Terminator terminator) {
+        terminators.add(terminator);
     }
 
-    public void appendChar(char charter) {
-        this.string += Character.toString(charter);
+    public ArrayList<Terminator> getTerminators() {
+        return terminators;
     }
 
-    public String getString() {
-        return string;
+    public void setLeaf(boolean leaf) {
+        isLeaf = leaf;
     }
 
-    public void setRepeatable(boolean repeatable) {
-        isRepeatable = repeatable;
+    public boolean isLeaf() {
+        return isLeaf;
     }
 
-    public boolean isRepeatable() {
-        return isRepeatable;
+    public void appendChunk(Chunk chunk) {
+        chunks.add(chunk);
     }
 
-    public void setCharClass(E_CharClass charClass) {
-        this.charClass = charClass;
-    }
-
-    public E_CharClass getCharClass() {
-        return charClass;
+    public ArrayList<Chunk> getChunks() {
+        return chunks;
     }
 
 
 
     @Override
     public int hashCode() {
-        return Objects.hash(string, isRepeatable, charClass);
-    }
-
-    @Override
-    public String toString() {
-        return "Group[" +
-                "chars=" + string + ", " +
-                "isRepeatable=" + isRepeatable + ", " +
-                "charClass=" + charClass + ']';
+        return Objects.hash(terminators);
     }
 
 }
