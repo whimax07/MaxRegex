@@ -19,6 +19,8 @@ public class WholePatternCheckTemp {
 
     private int terminatorIndex = 0;
 
+    private int unionSize;
+
 
 
     public WholePatternCheckTemp(ArrayList<Union> unions, String input) {
@@ -43,21 +45,22 @@ public class WholePatternCheckTemp {
 
     private E_State searchLoop() {
         Union union = unions.get(unionIndex);
-
+        unionSize = union.size();
         checkUnionTracking();
 
-        for (int i = terminatorIndex; i < union.size(); i++) {
-            Terminator terminator = union.get(i);
-            E_State searchState = terminatorSearch(terminator, i);
+        while (terminatorIndex < unionSize) {
+            Terminator terminator = union.get(terminatorIndex);
+            E_State searchState = terminatorSearch(union, terminator);
             if (searchState != E_State.SEARCHING) {
                 return searchState;
             }
+            terminatorIndex++;
         }
 
         return E_State.REQUEST_UNWIND;
     }
 
-    private void checkUnionTracking() {
+    /*private void checkUnionTracking() {
         if (unionHistories.size() <= unionIndex) {
             unionHistories.push(new UnionHistory(0, inputIndex));
         }
@@ -65,14 +68,14 @@ public class WholePatternCheckTemp {
         UnionHistory unionHistory = unionHistories.peek();
         assert unionHistory != null;
         terminatorIndex = unionHistory.terminatorIndex();
-    }
+    }*/
 
-    private E_State terminatorSearch(Terminator terminator, int currentTerminator) {
+    private E_State terminatorSearch(Union union, Terminator terminator) {
         if (currentTerminator == terminatorIndex && terminator.isRepeated()) {
             return zeroRepeat();
         }
 
-        SearchResult searchResult = terminator.getTerminate().match(inputIndex, input);
+        SearchResult searchResult = terminator.match(inputIndex, input);
 
         if (!searchResult.found()) {
             return terminatorNotFound(terminator);
@@ -81,14 +84,76 @@ public class WholePatternCheckTemp {
         return terminatorMatchFound(terminator, searchResult);
     }
 
-
-
-
-
-
-    private void unwind() {
+    private E_State zeroRepeat() {
 
     }
 
+    private E_State terminatorNotFound(Terminator terminator) {
+//        if (terminatorIndex < unionSize - 1) {
+//            return E_State.SEARCHING;
+//        }
+//
+//        // At this point tracking is only empty if we haven't seen a repeatable group yet.
+//        if (terminator.isRepeated()) {
+//            // We have gone too far with this current match.
+//            unionHistories.pop();
+//        }
+//
+//        // If tracking is empty then we cannot unwind. This makes the layout of the match up to this point "rigid" and
+//        // therefore the match has failed.
+//        if (unionHistories.isEmpty()) {
+//            return E_State.FAILURE;
+//        }
+//
+//        return E_State.REQUEST_UNWIND;
+    }
+
+    private E_State terminatorMatchFound(Terminator terminator, SearchResult searchResult) {
+        int oldInputIndex = inputIndex;
+        inputIndex = searchResult.firstFreeChar();
+
+        if (terminator.isRepeated() || unions.get(unionIndex).size() > 1) {
+            unionHistories.push(new UnionHistory(unionIndex, terminatorIndex, inputIndex));
+        }
+
+        unionIndex++;
+
+        if (unionIndex < unions.size()) {
+            return E_State.SEARCHING;
+        }
+        // unionIndex == unions.size()
+
+        // This is the case where we are done and happy, all groups matched to the full string.
+        if (inputIndex == input.length()) {
+            return E_State.SUCCESS;
+        }
+
+        // This is the case where the pattern has been matched, but it isn't the full string.
+        if (terminator.isRepeated()) {
+            // Undo the earlier increment in this function.
+            unionIndex--;
+            return E_State.SEARCHING;
+        }
+
+        if (terminatorIndex < unionSize - 1) {
+            inputIndex = oldInputIndex;
+            unionHistories.pop();
+            return E_State.SEARCHING;
+        }
+
+        // All the unions have been used, but we can't get any further. So we have to try and rollback.
+        if (unionHistories.isEmpty()) {
+            return E_State.FAILURE;
+        }
+
+        return E_State.REQUEST_UNWIND;
+    }
+
+    private void unwind() {
+        UnionHistory unionHistory = unionHistories.pop();
+        inputIndex = unionHistory.inputIndex();
+        unionIndex = unionHistory.unionIndex();
+        terminatorIndex = unionHistory.terminatorIndex();
+    }
 
 }
