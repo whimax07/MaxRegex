@@ -18,6 +18,12 @@ public class Terminator {
 
 
 
+    public SearchResult match(String input, int startIndex) {
+
+    }
+
+
+
     public I_Terminate getTerminate() {
         return terminate;
     }

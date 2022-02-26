@@ -21,6 +21,10 @@ public class WholePatternCheckTemp {
 
     private int unionSize;
 
+    private Union union;
+
+    private Terminator terminator;
+
 
 
     public WholePatternCheckTemp(ArrayList<Union> unions, String input) {
@@ -33,26 +37,29 @@ public class WholePatternCheckTemp {
     public boolean search() {
         while (true) {
             E_State searchState = searchLoop();
+
             switch (searchState) {
-                case SEARCHING: break;
-                case REQUEST_UNWIND: unwind(); break;
+                case REQUEST_UNWIND: {
+                    if (!unwind()) {
+                        return false;
+                    }
+                }
                 case SUCCESS: return true;
                 case FAILURE: return false;
-                default: throw new RuntimeException("The searchLoop has returned an ambitious state.");
+                case NEXT_UNION: break;
             }
         }
     }
 
     private E_State searchLoop() {
-        Union union = unions.get(unionIndex);
+        union = unions.get(unionIndex);
         unionSize = union.size();
-        checkUnionTracking();
 
         while (terminatorIndex < unionSize) {
-            Terminator terminator = union.get(terminatorIndex);
-            E_State searchState = terminatorSearch(union, terminator);
-            if (searchState != E_State.SEARCHING) {
-                return searchState;
+            terminator = union.get(terminatorIndex);
+            E_State state = terminatorSearch();
+            if (state != E_State.NEXT_TERM) {
+                return state;
             }
             terminatorIndex++;
         }
@@ -60,35 +67,110 @@ public class WholePatternCheckTemp {
         return E_State.REQUEST_UNWIND;
     }
 
-    /*private void checkUnionTracking() {
-        if (unionHistories.size() <= unionIndex) {
-            unionHistories.push(new UnionHistory(0, inputIndex));
+    private E_State terminatorSearch() {
+        // Search for the terminator.
+        SearchResult searchResult = terminator.match(input, inputIndex);
+
+        // Deal with a match.
+        if (searchResult.found()) {
+            return terminatorMatched(searchResult);
         }
 
-        UnionHistory unionHistory = unionHistories.peek();
-        assert unionHistory != null;
-        terminatorIndex = unionHistory.terminatorIndex();
-    }*/
-
-    private E_State terminatorSearch(Union union, Terminator terminator) {
-        if (currentTerminator == terminatorIndex && terminator.isRepeated()) {
-            return zeroRepeat();
-        }
-
-        SearchResult searchResult = terminator.match(inputIndex, input);
-
-        if (!searchResult.found()) {
-            return terminatorNotFound(terminator);
-        }
-
-        return terminatorMatchFound(terminator, searchResult);
+        // Deal without a match.
+        return terminatorNotMatched(searchResult);
     }
 
-    private E_State zeroRepeat() {
+    private E_State terminatorMatched(SearchResult searchResult) {
 
+        boolean lastUnion = isLastUnion();
+
+        if (lastUnion && isEndOfString(searchResult)) {
+            return E_State.SUCCESS;
+        }
+
+        if (isEndOfString(searchResult)) {
+            return E_State.REQUEST_UNWIND;
+        }
+
+        if (lastUnion && terminator.isRepeated()) {
+            return E_State.REPEAT_TERM;
+        }
+
+        if (lastUnion) {
+            return E_State.NEXT_TERM;
+        }
+
+        unionHistories.push(new UnionHistory(unionIndex, terminatorIndex, inputIndex));
+        return E_State.NEXT_UNION;
     }
 
-    private E_State terminatorNotFound(Terminator terminator) {
+    private E_State terminatorNotMatched(SearchResult searchResult) {
+        if (isLastTerminator()) {
+            return E_State.REQUEST_UNWIND;
+        }
+
+        if (terminator.isRepeated()) {
+
+        }
+
+        return E_State.NEXT_TERM;
+    }
+
+    private boolean unwind() {
+        if (unionHistories.size() == 0) {
+            return false;
+        }
+
+        UnionHistory history = unionHistories.pop();
+        unionIndex = history.unionIndex();
+        union = unions.get(unionIndex);
+        terminatorIndex = history.terminatorIndex();
+        terminator = union.get(terminatorIndex);
+
+        if (terminator.isRepeated()) {
+            return true;
+        }
+
+        terminatorIndex++;
+        if (terminatorIndex < union.size()) {
+            terminator = union.get(terminatorIndex);
+            return true;
+        }
+
+        return unwind();
+    }
+
+
+//
+//    /*private void checkUnionTracking() {
+//        if (unionHistories.size() <= unionIndex) {
+//            unionHistories.push(new UnionHistory(0, inputIndex));
+//        }
+//
+//        UnionHistory unionHistory = unionHistories.peek();
+//        assert unionHistory != null;
+//        terminatorIndex = unionHistory.terminatorIndex();
+//    }*/
+//
+//    private E_State terminatorSearch(Union union, Terminator terminator) {
+//        if (currentTerminator == terminatorIndex && terminator.isRepeated()) {
+//            return zeroRepeat();
+//        }
+//
+//        SearchResult searchResult = terminator.match(inputIndex, input);
+//
+//        if (!searchResult.found()) {
+//            return terminatorNotFound(terminator);
+//        }
+//
+//        return terminatorMatchFound(terminator, searchResult);
+//    }
+//
+//    private E_State zeroRepeat() {
+//
+//    }
+//
+//    private E_State terminatorNotFound(Terminator terminator) {
 //        if (terminatorIndex < unionSize - 1) {
 //            return E_State.SEARCHING;
 //        }
@@ -106,54 +188,67 @@ public class WholePatternCheckTemp {
 //        }
 //
 //        return E_State.REQUEST_UNWIND;
+//    }
+//
+//    private E_State terminatorMatchFound(Terminator terminator, SearchResult searchResult) {
+//        int oldInputIndex = inputIndex;
+//        inputIndex = searchResult.firstFreeChar();
+//
+//        if (terminator.isRepeated() || unions.get(unionIndex).size() > 1) {
+//            unionHistories.push(new UnionHistory(unionIndex, terminatorIndex, inputIndex));
+//        }
+//
+//        unionIndex++;
+//
+//        if (unionIndex < unions.size()) {
+//            return E_State.SEARCHING;
+//        }
+//        // unionIndex == unions.size()
+//
+//        // This is the case where we are done and happy, all groups matched to the full string.
+//        if (inputIndex == input.length()) {
+//            return E_State.SUCCESS;
+//        }
+//
+//        // This is the case where the pattern has been matched, but it isn't the full string.
+//        if (terminator.isRepeated()) {
+//            // Undo the earlier increment in this function.
+//            unionIndex--;
+//            return E_State.SEARCHING;
+//        }
+//
+//        if (terminatorIndex < unionSize - 1) {
+//            inputIndex = oldInputIndex;
+//            unionHistories.pop();
+//            return E_State.SEARCHING;
+//        }
+//
+//        // All the unions have been used, but we can't get any further. So we have to try and rollback.
+//        if (unionHistories.isEmpty()) {
+//            return E_State.FAILURE;
+//        }
+//
+//        return E_State.REQUEST_UNWIND;
+//    }
+//
+//    private void unwind() {
+//        UnionHistory unionHistory = unionHistories.pop();
+//        inputIndex = unionHistory.inputIndex();
+//        unionIndex = unionHistory.unionIndex();
+//        terminatorIndex = unionHistory.terminatorIndex();
+//    }
+
+
+    private boolean isLastUnion() {
+        return unions.size() == unionIndex + 1;
     }
 
-    private E_State terminatorMatchFound(Terminator terminator, SearchResult searchResult) {
-        int oldInputIndex = inputIndex;
-        inputIndex = searchResult.firstFreeChar();
-
-        if (terminator.isRepeated() || unions.get(unionIndex).size() > 1) {
-            unionHistories.push(new UnionHistory(unionIndex, terminatorIndex, inputIndex));
-        }
-
-        unionIndex++;
-
-        if (unionIndex < unions.size()) {
-            return E_State.SEARCHING;
-        }
-        // unionIndex == unions.size()
-
-        // This is the case where we are done and happy, all groups matched to the full string.
-        if (inputIndex == input.length()) {
-            return E_State.SUCCESS;
-        }
-
-        // This is the case where the pattern has been matched, but it isn't the full string.
-        if (terminator.isRepeated()) {
-            // Undo the earlier increment in this function.
-            unionIndex--;
-            return E_State.SEARCHING;
-        }
-
-        if (terminatorIndex < unionSize - 1) {
-            inputIndex = oldInputIndex;
-            unionHistories.pop();
-            return E_State.SEARCHING;
-        }
-
-        // All the unions have been used, but we can't get any further. So we have to try and rollback.
-        if (unionHistories.isEmpty()) {
-            return E_State.FAILURE;
-        }
-
-        return E_State.REQUEST_UNWIND;
+    private boolean isLastTerminator() {
+        return union.size() == terminatorIndex + 1;
     }
 
-    private void unwind() {
-        UnionHistory unionHistory = unionHistories.pop();
-        inputIndex = unionHistory.inputIndex();
-        unionIndex = unionHistory.unionIndex();
-        terminatorIndex = unionHistory.terminatorIndex();
+    private boolean isEndOfString(SearchResult searchResult) {
+        return input.length() == searchResult.firstFreeChar();
     }
 
 }

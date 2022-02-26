@@ -30,7 +30,7 @@ public class WholePatternCheck {
         while (true) {
             E_State searchState = searchLoop();
             switch (searchState) {
-                case SEARCHING: break;
+                case NEXT_UNION: break;
                 case REQUEST_UNWIND: unwind(); break;
                 case SUCCESS: return true;
                 case FAILURE: return false;
@@ -79,7 +79,7 @@ public class WholePatternCheck {
         chunkIndex++;
 
         if (chunkIndex < patternChunks.size()) {
-            return E_State.SEARCHING;
+            return E_State.NEXT_UNION;
         }
         // chunkIndex == groups.size()
 
@@ -90,7 +90,7 @@ public class WholePatternCheck {
 
         // This is the case where the pattern has been matched, but it isn't the full string.
         chunkIndex--;
-        return E_State.SEARCHING;
+        return E_State.NEXT_UNION;
     }
 
     private E_State chunkMatchFound(I_Chunk chunk, SearchResult searchResult) {
@@ -103,7 +103,7 @@ public class WholePatternCheck {
         chunkIndex++;
 
         if (chunkIndex < patternChunks.size()) {
-            return E_State.SEARCHING;
+            return E_State.NEXT_UNION;
         }
         // chunkIndex == groups.size()
 
@@ -115,7 +115,7 @@ public class WholePatternCheck {
         // This is the case where the pattern has been matched but it isn't the full string.
         if (chunk.isRepeatable()) {
             chunkIndex--;
-            return E_State.SEARCHING;
+            return E_State.NEXT_UNION;
         }
 
         // All the groups have been used, but we can't get any further. So we have to try and rollback. This also
