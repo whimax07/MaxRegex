@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 /**
  * A simple limited regex implementation without recursion.
  * Usable syntax:
- * - Alphanumerics.
+ * - Alphanumerics and spaces.
  * - Any character or wild card, "." the full stop.
  * - Greedy zero or more of the previous, "*" Asterisk or star.
  */
@@ -36,7 +36,7 @@ public class SimpleRegex {
         while (true) {
             boolean requestGoBack = false;
 
-            if (patternPos < pattern.length() - 2 && pattern.charAt(patternPos + 1) == '*') {
+            if (patternPos < pattern.length() - 1 && pattern.charAt(patternPos + 1) == '*') {
                 // Can always match at least zero.
                 doRepeatSearch();
             } else {
@@ -48,13 +48,22 @@ public class SimpleRegex {
                 return true;
             }
 
-            if (patternPos >= pattern.length() || inputPos >= input.length()) {
+            if (patternPos >= pattern.length()) {
                 requestGoBack = true;
             }
 
-            if (requestGoBack && !goBack()) {
-                // No match found.
-                return false;
+            // This is crazy. Else on different lines is not a good idea.
+            else if (inputPos >= input.length()
+                    && (patternPos == pattern.length() - 1 || pattern.charAt(patternPos + 1) != '*')) {
+                requestGoBack = true;
+            }
+
+            if (requestGoBack) {
+                boolean whenBack = goBack();
+                if (!whenBack) {
+                    // No match found.
+                    return false;
+                }
             }
         }
     }
@@ -82,7 +91,10 @@ public class SimpleRegex {
                 return true;
             }
 
-            // The repeat count was at zero so keep trying to roll back.
+            // The repeat count was at zero so keep trying to roll back and restore the unneeded decrement.
+            inputPos += 1;
+            // Move past the character attached to the zero repeat star.
+            patternPos -= 1;
             repeatCounts.pop();
         }
 
@@ -128,14 +140,25 @@ public class SimpleRegex {
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(input);
         boolean matches = m.matches();
-        assert (matches == simpleRegex.match());
+        if (matches != simpleRegex.match()) {
+            throw new RuntimeException("Regex wrong: pattern: " + pattern + " input: " + input);
+        };
     }
 
+    /**
+     * An over estimate of the size of the pattern space of meaningfully different strings.
+     *
+     * pattern1 = "abc", pattern2 = "abd" and input = "abz".
+     * Here pattern1 and pattern2 are not meaningfully different as we are happy the algorithm can do char comparisons.
+     *
+     * Size of pattern space = sum_over(pattern_len)((i * 2 + 2) ^ i)
+     * Size of input space = sum_over(inputLen)((i * 2 + 2) ^ i)
+     */
     private static void randomPatternAndInput() {
         StringBuilder stringBuilder;
 
         // Make the input.
-        int sLen = (int) (Math.random() * 20) + 1;
+        int sLen = (int) (Math.random() * 10) + 1;
         stringBuilder = new StringBuilder();
         for (int i = 0; i < sLen; i++) {
             stringBuilder.append((char) ((Math.random() * 25) + 97));
@@ -143,7 +166,7 @@ public class SimpleRegex {
         String input = stringBuilder.toString();
 
         // Make the pattern.
-        int pLen = (int) (Math.random() * 20) + 1;
+        int pLen = (int) (Math.random() * 8) + 1;
         double chanceForStar = Math.random();
         stringBuilder = new StringBuilder();
         for (int i = 0; i < pLen; i++) {
@@ -162,9 +185,21 @@ public class SimpleRegex {
         test(pattern, input);
     }
 
+    private static void failedCases() {
+        test(".*.*.", "f");
+        test(".*.*.", "sj");
+        test("..*", "m");
+        test(".*", "ntthubh");
+    }
+
     public static void main(String[] args) {
-        for (int i = 0; i < 1_000_000; i++) {
-            randomPatternAndInput();
+        failedCases();
+
+        for (int j = 0; j < 50; j++) {
+            for (int i = 0; i < 1_000_000; i++) {
+                randomPatternAndInput();
+            }
+            System.out.println("Passed " + (j + 1) + " million random tests.");
         }
         System.out.println("Finished.");
     }
