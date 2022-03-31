@@ -135,73 +135,14 @@ public class SimpleRegex {
 
 
 
-    private static void test(String pattern, String input) {
+    public static void test(String pattern, String input) {
         SimpleRegex simpleRegex = new SimpleRegex(input, pattern);
         Pattern p = Pattern.compile(pattern);
         Matcher m = p.matcher(input);
         boolean matches = m.matches();
         if (matches != simpleRegex.match()) {
             throw new RuntimeException("Regex wrong: pattern: " + pattern + " input: " + input);
-        };
-    }
-
-    /**
-     * An over estimate of the size of the pattern space of meaningfully different strings.
-     *
-     * pattern1 = "abc", pattern2 = "abd" and input = "abz".
-     * Here pattern1 and pattern2 are not meaningfully different as we are happy the algorithm can do char comparisons.
-     *
-     * Size of pattern space = sum_over(pattern_len)((i * 2 + 2) ^ i)
-     * Size of input space = sum_over(inputLen)((i * 2 + 2) ^ i)
-     */
-    private static void randomPatternAndInput() {
-        StringBuilder stringBuilder;
-
-        // Make the input.
-        int sLen = (int) (Math.random() * 10) + 1;
-        stringBuilder = new StringBuilder();
-        for (int i = 0; i < sLen; i++) {
-            stringBuilder.append((char) ((Math.random() * 25) + 97));
         }
-        String input = stringBuilder.toString();
-
-        // Make the pattern.
-        int pLen = (int) (Math.random() * 8) + 1;
-        double chanceForStar = Math.random();
-        stringBuilder = new StringBuilder();
-        for (int i = 0; i < pLen; i++) {
-            int num = (int) (Math.random() * 26);
-            if (num == 0) {
-                stringBuilder.append(".");
-            } else {
-                stringBuilder.append((char) num + 96);
-            }
-            if (Math.random() > chanceForStar) {
-                stringBuilder.append('*');
-            }
-        }
-        String pattern = stringBuilder.toString();
-
-        test(pattern, input);
-    }
-
-    private static void failedCases() {
-        test(".*.*.", "f");
-        test(".*.*.", "sj");
-        test("..*", "m");
-        test(".*", "ntthubh");
-    }
-
-    public static void main(String[] args) {
-        failedCases();
-
-        for (int j = 0; j < 50; j++) {
-            for (int i = 0; i < 1_000_000; i++) {
-                randomPatternAndInput();
-            }
-            System.out.println("Passed " + (j + 1) + " million random tests.");
-        }
-        System.out.println("Finished.");
     }
 
 }
