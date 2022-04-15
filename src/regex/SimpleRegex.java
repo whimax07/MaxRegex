@@ -32,6 +32,9 @@ public class SimpleRegex {
 
 
 
+    /**
+     * @return true if {@code pattern} matches the whole of {@code input}.
+     */
     public boolean match() {
         while (true) {
             boolean requestGoBack = false;
