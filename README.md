@@ -8,6 +8,8 @@ To run the more elaborate version of regex use the api in [MaxRegex](src/regex/M
 ### Example
 Simple Regex
 ```java
+import src.regex.SimpleRegex;
+        
 String testString = "AABBCC";
 String pattern = "AAB+C.";
 SimpleRegex regex = new SimpleRegex(testString, pattern);
@@ -18,6 +20,8 @@ boolean matches = regex.matches();
 
 Elaborate Regex
 ```java
+import src.regex.MaxRegex;
+
 String testString = "AABBCC";
 String pattern = "AAB+C.";
 
