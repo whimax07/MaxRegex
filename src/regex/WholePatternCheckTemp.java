@@ -43,6 +43,7 @@ public class WholePatternCheckTemp {
                     if (!unwind()) {
                         return false;
                     }
+                    break;
                 }
                 case SUCCESS: return true;
                 case FAILURE: return false;
